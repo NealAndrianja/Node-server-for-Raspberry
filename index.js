@@ -13,6 +13,44 @@ app.use(cors({ origin: "http://localhost:3000" }));
 
 const server = http.createServer(app);
 
+function appendObjectToFile(filename, newObject) {
+  fs.readFile(filename, 'utf8', (err, fileData) => {
+    if (err) {
+      if (err.code === 'ENOENT') {
+        // File doesn't exist, create a new one with the object
+        const data = JSON.stringify([newObject], null, 2);
+        fs.writeFile(filename, data, (err) => {
+          if (err) {
+            console.error('Error creating and writing file:', err);
+          } else {
+            console.log('New JSON file created with the object.');
+          }
+        });
+      } else {
+        console.error('Error reading file:', err);
+      }
+      return;
+    }
+
+    try {
+      // Parse existing data and append new object
+      const jsonData = JSON.parse(fileData);
+      jsonData.push(newObject);
+      const updatedData = JSON.stringify(jsonData, null, 2);
+
+      fs.writeFile(filename, updatedData, (err) => {
+        if (err) {
+          console.error('Error appending object to file:', err);
+        } else {
+          console.log('Object appended successfully!');
+        }
+      });
+    } catch (parseError) {
+      console.error('Error parsing JSON data:', parseError);
+    }
+  });
+}
+
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000",
@@ -68,6 +106,11 @@ function connectToBroker() {
     );
     let mqttMessage = message.toString()
     io.emit("mqtt", mqttMessage)
+    appendObjectToFile("data.json", {
+      topic: topic,
+      message: message.toString(),
+      time: new Date(Date.now()),
+    });
   });
 }
 
@@ -87,6 +130,17 @@ function publishToTopic(topic, message) {
 
 connectToBroker();
 subscribeToTopic("home/esp32/voltage");
+
+app.get('/data.json', (req, res) => {
+  fs.readFile('data.json', 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading file:', err);
+      res.status(500).send('Error reading data');
+    } else {
+      res.json(JSON.parse(data));
+    }
+  });
+});
 
 
 
