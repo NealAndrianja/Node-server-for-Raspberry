@@ -1,0 +1,8 @@
+cron: a way to do something periodically
+capped collection: in Mongo to archive the oldest collection
+log file: see the standard log file to store huge amounts of data
+
+concept in use:
+mqtt
+socket
+cors
