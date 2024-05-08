@@ -1,35 +1,35 @@
-const fs = require('fs/promises'); // Use promises for cleaner async/await syntax
+const { InfluxDB, Point } = require("@influxdata/influxdb-client");
+const dotenv = require("dotenv");
 
-const appendObjectToFile = async (filename, newObject) => {
-  try {
-    const data = await fs.readFile(filename, 'utf8');
-    let jsonData;
-    if (data) {
-      jsonData = JSON.parse(data);
-    } else {
-      jsonData = []; // Initialize with empty array if file is empty
-    }
-    jsonData.push(newObject);
-    const updatedData = JSON.stringify(jsonData, null, 2);
-    await fs.writeFile(filename, updatedData);
-    console.log('Object appended successfully!');
-  } catch (err) {
-    console.error('Error appending object to file:', err);
-  }
+dotenv.config();
+
+const token = process.env.INFLUXDB_TOKEN;
+const url = "http://192.168.1.200:8086";
+
+const client = new InfluxDB({ url, token });
+let org = `Box Domotique`;
+let bucket = `smarthome`;
+
+let writeClient = client.getWriteApi(org, bucket, "ns");
+let queryClient = client.getQueryApi(org);
+
+const writeToDB = (topic, message) => {
+  let point = new Point("smart_socket")
+    .tag("room", "living_room")
+    .floatField(topic, parseFloat(message));
+  writeClient.writePoint(point);
+  writeClient.flush();
 };
 
-const getData = async () => {
-  try {
-    const data = await fs.readFile('data.json', 'utf8');
-    return JSON.parse(data);
-  } catch (err) {
-    // Handle error gracefully (e.g., log error, return empty array)
-    return [];
+const readFromDB = async (query) => {
+  const result = [];
+  for await (const { values, tableMeta } of queryClient.iterateRows(query)) {
+    result.push(tableMeta.toObject(values));
   }
+  return result;
 };
 
 module.exports = {
-  appendObjectToFile,
-  getData
+  writeToDB,
+  readFromDB,
 };
-

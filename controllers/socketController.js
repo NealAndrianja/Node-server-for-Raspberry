@@ -19,7 +19,7 @@ const socketHandler = io => {  io.on("connection", (socket) => {
     commands.forEach((topic) =>
       socket.on(topic.name, (data) => {
         console.log(data);
-        mqttEventEmitter.emit("commande", topic.command, data.toString())
+        mqttEventEmitter.emit("command", topic.command, data.toString())
         // publishToTopic(topic.command, data.toString());
       })
     );

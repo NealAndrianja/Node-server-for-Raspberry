@@ -2,6 +2,7 @@ const mqtt = require('mqtt');
 const config = require('../config/mqtt.config');
 const {socketEmitter} = require('./socketController')
 const mqttEventEmitter = require('../event/events');
+const {writeToDB} = require('./dataController')
 
 let mqttClient;
 
@@ -14,12 +15,6 @@ const topics = [
     "home/esp32/pf"
 ]
 
-const commands = [
-    {
-        name: "IO",
-        command: "home/esp32/command"
-    }
-]
 
 function connectToBroker(io) {
   const clientId = `client-${Math.random().toString(36).substring(7)}`;
@@ -51,9 +46,11 @@ function connectToBroker(io) {
 
   mqttClient.on('message', (topic, message) => {
     console.log(`Received message on ${topic}: ${message.toString()}`);
-    // Emit the message to the frontend using Socket.IO (requires access to io instance)
-    // io.emit(topic, message.toString()); // Assuming JSON data
-    mqttEventEmitter.emit('message', topic, message.toString()) // Assuming JSON data
+    //write to influxDB
+    writeToDB(topic, message.toString());
+
+    //emit to socket
+    mqttEventEmitter.emit('message', topic, message.toString()) 
   });
 
   mqttEventEmitter.on("command", (topic, data) => {
@@ -77,6 +74,5 @@ function publishToTopic(topic, message) {
 
 module.exports = {
   connectToBroker,
-  publishToTopic,
-  commands
+  publishToTopic
 };
