@@ -5,6 +5,10 @@ const commands = [
   {
       name: "IO",
       command: "home/esp32/command"
+  },
+  {
+    name: "brightness",
+    command: "home/esp32/luminosite"
   }
 ]
 
