@@ -1,6 +1,6 @@
 module.exports = {
     protocol: 'mqtt',
-    host: '192.168.1.25', 
+    host: 'localhost', 
     port: 1883, 
     username: 'neal', 
     password: '1234' 

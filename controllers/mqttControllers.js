@@ -12,7 +12,9 @@ const topics = [
     "home/esp32/power",
     "home/esp32/energy",
     "home/esp32/frequency",
-    "home/esp32/pf"
+    "home/esp32/pf",
+    "home/esp32/temperature",
+    "home/esp32/humidite"
 ]
 
 

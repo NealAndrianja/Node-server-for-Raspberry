@@ -4,10 +4,10 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const token = process.env.INFLUXDB_TOKEN;
-const url = "http://192.168.1.100:8086";
+const url = "http://localhost:8086";
 
 const client = new InfluxDB({ url, token });
-let org = `Box Domotique`;
+let org = `mqttProject`;
 let bucket = `smarthome`;
 
 let writeClient = client.getWriteApi(org, bucket, "ns");
