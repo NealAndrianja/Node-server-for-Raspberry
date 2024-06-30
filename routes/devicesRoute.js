@@ -19,37 +19,36 @@ router.get('/devices', async (req, res) => {
 });
 
 router.post('/devices', async (req, res) => {
-  console.log(req.body)
   const deviceData = req.body;
   try {
     await writeDeviceData(deviceData);
     res.json({ message: 'Device created successfully.' });
   } catch (error) {
     console.error('Error creating device:', error);
-    res.status(400).json({ message: error.message }); // Use specific error message
+    res.status(400).json({ message: error.message });
   }
 });
 
-router.put('/devices/:deviceId', async (req, res) => {
-  const deviceId = req.params.deviceId;
+router.put('/devices/:serialNumber', async (req, res) => {
+  const serialNumber = req.params.serialNumber;
   const updatedData = req.body;
   try {
-    await updateDevice(deviceId, updatedData);
+    await updateDevice(serialNumber, updatedData);
     res.json({ message: 'Device updated successfully.' });
   } catch (error) {
     console.error('Error updating device:', error);
     if (error.message.includes('not found')) {
       res.status(404).json({ message: 'Device not found' });
     } else {
-      res.status(400).json({ message: error.message }); // Use specific error message
+      res.status(400).json({ message: error.message });
     }
   }
 });
 
-router.delete('/devices/:deviceId', async (req, res) => {
-  const deviceId = req.params.deviceId;
+router.delete('/devices/:serialNumber', async (req, res) => {
+  const serialNumber = req.params.serialNumber;
   try {
-    await deleteDevice(deviceId);
+    await deleteDevice(serialNumber);
     res.json({ message: 'Device deleted successfully.' });
   } catch (error) {
     console.error('Error deleting device:', error);

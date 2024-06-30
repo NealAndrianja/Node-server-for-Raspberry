@@ -24,7 +24,7 @@ const socketHandler = (io) => {
       socket.on(topic.name, (data) => {
         console.log(data);
         mqttEventEmitter.emit("command", topic.command, data.toString());
-        // publishToTopic(topic.command, data.toString());
+        io.emit(`${topic.name} broadcast`, data); // Broadcast to all clients
       })
     );
 
