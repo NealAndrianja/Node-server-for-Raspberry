@@ -4,7 +4,7 @@ const path = require('path');
 const filePath = path.join(__dirname, '..', 'files', 'devices.json');
 
 const validateDeviceData = (data) => {
-  if (!data.name || !data.brand || !data.model || !data.serialNumber) {
+  if (!data.name || !data.type || !data.model || !data.serialNumber) {
     throw new Error('Invalid device data structure');
   }
 };

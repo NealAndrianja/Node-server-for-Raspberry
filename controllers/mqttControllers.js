@@ -3,23 +3,11 @@ const config = require("../config/mqtt.config");
 const { socketEmitter } = require("./socketController");
 const mqttEventEmitter = require("../event/events");
 const { writeToDB } = require("./dataController");
+const { getDevices } = require("./devicesController");
 
 let mqttClient;
 
-const topics = [
-  "home/esp32/voltage",
-  "home/esp32/current",
-  "home/esp32/power",
-  "home/esp32/energy",
-  "home/esp32/frequency",
-  "home/esp32/pf",
-  "home/esp32/temperature",
-  "home/esp32/humidite",
-  "home/interrupteur/state",
-  "home/prise/state",
-];
-
-function connectToBroker(io) {
+async function connectToBroker(io) {
   const clientId = `client-${Math.random().toString(36).substring(7)}`;
   const hostURL = `${config.protocol}://${config.host}:${config.port}`;
 
@@ -42,18 +30,24 @@ function connectToBroker(io) {
     mqttClient.end();
   });
 
-  mqttClient.on("connect", () => {
+  mqttClient.on("connect", async () => {
     console.log(`MQTT Client connected: ${clientId}`);
-    topics.forEach((topic) => subscribeToTopic(mqttClient, topic));
+    const devices = await getDevices();
+    devices.forEach((device) => {
+      if (device.topics && device.topics.data) {
+        subscribeToTopic(mqttClient, device.topics.lwt)
+        device.topics.data.forEach((topic) => subscribeToTopic(mqttClient, topic));
+      }
+    });
   });
 
   mqttClient.on("message", (topic, message) => {
     console.log(`Received message on ${topic}: ${message.toString()}`);
 
-    if (topic !== "home/interrupteur/state" && topic !== "home/prise/state") {
-      //write to influxDB
+    if (!topic.includes("/lwt")) {
+      // Write to influxDB
       writeToDB(topic, message.toString());
-      //emit to socket
+      // Emit to socket
       mqttEventEmitter.emit("message", topic, message.toString());
     }
     // Handle LWT message
@@ -79,16 +73,14 @@ function publishToTopic(topic, message) {
 }
 
 function handleSensorStatus(topic, status) {
-  const regex = /\/(.*?)\//; 
+  const regex = /\/(.*?)\//;
   const match = regex.exec(topic);
   const device = match[1];
   if (status === "offline") {
     console.log(`${device} is offline`);
-    // Handle sensor offline status, e.g., notify via socket or log the event
     mqttEventEmitter.emit("sensor-status", "offline");
   } else if (status === "online") {
-    console.log(`${device} is online`)
-    // Handle sensor online status, e.g., notify via socket or log the event
+    console.log(`${device} is online`);
     mqttEventEmitter.emit("sensor-status", "online");
   }
 }
